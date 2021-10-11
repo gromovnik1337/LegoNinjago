@@ -6,3 +6,5 @@ latent_dim = 2000
 lr = 1e-4
 
 epochs = 30
+
+batch_size = 1
