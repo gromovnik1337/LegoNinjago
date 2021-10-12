@@ -46,6 +46,37 @@ def ConvertToXYZ(dataframe, bunny, plane):
     bunny_datapoints = np.block([df_x[:, idx].reshape(-1, 1), df_y[:, idx].reshape(-1, 1), df_z[:, idx].reshape(-1, 1)])
     return bunny_datapoints
 
+def DirectToXYZObject(dataframe, bunny):
+
+    print("Creating dataframe object/class containing datapoints for each plane i.e. (.til, .hor, .ver)...")
+    class point_coords:
+        def __init__(self, x, y, z):
+            self.x = x
+            self.y = y
+            self.z = z
+
+    class plane_dataframe:
+        def __init__(self, til, hor, ver):
+            self.til = til
+            self.hor = hor
+            self.ver = ver
+
+    converted_til = ConvertToXYZ(dataframe, bunny, "tilt")
+    converted_til = CorrectAxes(converted_til)
+    converted_til = point_coords(converted_til[0, :], converted_til[1, :], converted_til[2, :])
+
+    converted_hor = ConvertToXYZ(dataframe, bunny, "horizontal")
+    converted_hor = CorrectAxes(converted_hor)
+    converted_hor = point_coords(converted_hor[0, :], converted_hor[1, :], converted_hor[2, :])
+
+    converted_ver = ConvertToXYZ(dataframe, bunny, "vertical")
+    converted_ver = CorrectAxes(converted_ver)
+    converted_ver = point_coords(converted_ver[0, :], converted_ver[1, :], converted_ver[2, :])
+
+    converted_dataframe = plane_dataframe(converted_til, converted_hor, converted_ver)
+
+    return converted_dataframe
+
 def AffineFit(nominal_plane_pts):
     centre = np.mean(nominal_plane_pts, axis = 1) # Axes are: X, Y, Z
     delta = nominal_plane_pts.T - centre

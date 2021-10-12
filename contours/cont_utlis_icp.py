@@ -7,6 +7,16 @@ def LoadMesh(data_dir, bunny_name):
 
     return mesh
 
+
+def LoadPointcloudList(data_dir, pcd_list):
+    pcd_output = []
+    for pcd in pcd_list:
+        print("Loading {} PointCloud in Open3d format...".format(pcd + ".pcd"))
+        curr_pcd = o3d.io.read_point_cloud(data_dir + "/" + pcd + ".pcd")
+        pcd_output.append(curr_pcd)
+    print('\n')
+    return pcd_output
+
 def LoadPointcloud(data_dir, pcd_name):
     print("Loading meshes in open3d...")
     pcd1 = o3d.io.read_point_cloud(data_dir + "/" + pcd_name + ".pcd")

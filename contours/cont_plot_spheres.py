@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import open3d as o3d
 from cont_utils_plot_spheres import CorrectAxes, ConvertToXYZ, AffineFit, VerticalAxesSwitch, CreateContours, set_axes_equal
-from cont_utlis_icp import LoadPointcloud
+from cont_utlis_icp import LoadPointcloud, LoadPointcloudList
 
 # Append the required sys.path for accessing the other directories
 import os
@@ -20,12 +20,11 @@ if __name__ == '__main__':
 
     # Load the data and the clouds
     PlaneData = pd.read_csv(data_dir + "/" + "MeasurementDataset.csv").to_numpy()
-    cad_bunny_dps = LoadPointcloud(data_dir, "cad_bunny_pcd")
-    bunny_1_dps = LoadPointcloud(data_dir, "bunny_1_pcd")
-    bunny_2_dps = LoadPointcloud(data_dir, "bunny_2_pcd")
-    bunny_3_dps = LoadPointcloud(data_dir, "bunny_3_pcd")
-    bunny_4_dps = LoadPointcloud(data_dir, "bunny_4_pcd")
 
+    [cad_bunny_dps, bunny_1_dps, bunny_2_dps, bunny_3_dps, bunny_4_dps] = \
+        LoadPointcloudList(data_dir, ["cad_bunny_pcd", "bunny_1_pcd", "bunny_2_pcd", "bunny_3_pcd", "bunny_4_pcd"])
+
+    # Preliminary rotations (no longer need to be applied as global rotations and alignments have been saved to pointcloud data)
     cad_rotation_angle = math.pi / 2 * 0
     bunny_1_rotation_angle = math.pi / 2 * 2
     translation_distance_x = 14.897
