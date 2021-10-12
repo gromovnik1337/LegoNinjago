@@ -21,29 +21,35 @@ if __name__ == '__main__':
     [cad_bunny_dps, bunny_1_dps, bunny_2_dps, bunny_3_dps, bunny_4_dps] = \
         LoadPointcloudList(data_dir, ["cad_bunny_pcd", "bunny_1_pcd", "bunny_2_pcd", "bunny_3_pcd", "bunny_4_pcd"])
 
-    cad_planes      =   DirectToXYZObject(PlaneData, 'nominal')
-    bunny_1_planes  =   DirectToXYZObject(PlaneData, 'bunny_1')
-    bunny_2_planes  =   DirectToXYZObject(PlaneData, 'bunny_2')
-    bunny_3_planes  =   DirectToXYZObject(PlaneData, 'bunny_3')
-    bunny_4_planes  =   DirectToXYZObject(PlaneData, 'bunny_4')
-    print('\n')
+    cad_points      =   DirectToXYZObject(PlaneData, 'nominal')
+    bunny_1_points  =   DirectToXYZObject(PlaneData, 'bunny_1')
+    bunny_2_points  =   DirectToXYZObject(PlaneData, 'bunny_2')
+    bunny_3_points  =   DirectToXYZObject(PlaneData, 'bunny_3')
+    bunny_4_points  =   DirectToXYZObject(PlaneData, 'bunny_4')
 
-    print(bunny_4_planes.ver.x) # This does correlate to what is found in the MeasurementDataset.csv file for the X values in the vertical plane for bunny 4
+    print(bunny_3_points.til) # This does correlate to what is found in the MeasurementDataset.csv file for the X values in the vertical plane for bunny 4
 
     '''
     each of the above ojbects has the folllowing structure:
 
-                          |-x (1D-np.array)
-                    |-til-|-y (1D-np.array)
-                    |     |-z (1D-np.array)
-                    |
-                    |     |-x (1D-np.array)
-    plane_dataframe-|-hor-|-y (1D-np.array)
-                    |     |-z (1D-np.array)
-                    |
-                    |     |-x (1D-np.array)
-                    |-ver-|-y (1D-np.array)
-                          |-z (1D-np.array)
+                    |-til (2D-np.array)
+    plane_dataframe-|-hor (2D-np.array)
+                    |-ver (2D-np.array)
+
     '''
+
+    print(bunny_1_points.__dir__())
+
+    for bunny in [bunny_1_points, bunny_2_points, bunny_3_points, bunny_4_points]:
+        for plane in bunny.__dict__:
+            cad_plane = cad_points.__getattribute__(plane)
+            scan_plane = bunny.__getattribute__(plane)
+
+            delta = cad_plane - scan_plane
+            delta = np.round(delta, 3)
+
+            setattr(bunny, str(plane), delta)
+
+    print(bunny_3_points.til)
 
     # Yet to decide metric to extract from cloud sphere datapoints...
