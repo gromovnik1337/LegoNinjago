@@ -28,7 +28,7 @@ if __name__ == '__main__':
     bunny_4_planes  =   DirectToXYZObject(PlaneData, 'bunny_4')
     print('\n')
 
-    print(cad_planes.ver.y)
+    print(bunny_4_planes.ver.x) # This does correlate to what is found in the MeasurementDataset.csv file for the X values in the vertical plane for bunny 4
 
     '''
     each of the above ojbects has the folllowing structure:
