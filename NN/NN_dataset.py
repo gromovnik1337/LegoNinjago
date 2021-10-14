@@ -23,16 +23,14 @@ class bunniesDataset(Dataset):
     """
 
     def __init__(self, csv_file, root_dir):
-        self.annotations = pd.read_csv(csv_file, header = None)
-        self.root_dir = root_dir
+        self.root_dir   = root_dir
+        self.dataframe  = pd.read_csv(os.path.join(self.root_dir, csv_file))
 
     def __len__(self):
-        return len(self.annotations)
+        return len(self.dataframe)
 
     def __getitem__(self, index):
-        file_path = os.path.join(self.root_dir, self.annotations.iloc[index, 0])
-        file = genfromtxt(file_path, delimiter = ',') # Create a numpy array from the text .csv
-        X = torch.tensor(file[0:10, 1], dtype = torch.float32)
-        y = torch.tensor(file[10:13, 1], dtype = torch.float32)
+        X = torch.tensor(self.dataframe.iloc[index, 1:10], dtype = torch.float32)
+        y = torch.tensor(self.dataframe.iloc[index, 10:13], dtype = torch.float32)
 
         return X, y

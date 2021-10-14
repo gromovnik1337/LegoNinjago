@@ -37,7 +37,7 @@ class BunnyRegressorNetwork(nn.Module):
 
 def LoadDataset(dataset_dir):
     dataset = bunniesDataset(
-            csv_file = dataset_dir + "/" + "annotations.csv",
+            csv_file = dataset_dir + "/" + "ErrorDataframe.csv",
             root_dir = dataset_dir,
             )
 
@@ -81,7 +81,7 @@ def train(network, dataloader, epochs, device):
     test_var = True
     losses_all = []
 
-    optimizer   = optim.Adam(network.parameters(), lr = 0.001)
+    optimizer   = optim.Adam(network.parameters(), lr = 0.005)
     criterion   = nn.MSELoss()
 
     print("------ Bertybob is now learning ------ \n")
@@ -91,8 +91,8 @@ def train(network, dataloader, epochs, device):
         running_loss    =   0
         iter_counter    =   0
 
-        for batch_idx, (label, input) in enumerate(dataloader):
-            input = input.to(device) # Save the batch to the device (CPU or GPU)
+        for batch_idx, (input, label) in enumerate(dataloader):
+            input   = input.to(device) # Save the batch to the device (CPU or GPU)
             optimizer.zero_grad() # Remove the gradients from the previous iteration
 
             # Feed the batch into VAE, compute the loss
@@ -142,9 +142,9 @@ def main(seed):
     dataset                 = LoadDataset(data_dir)
     trainloader, testloader = SplitDataset(dataset, 0.75)
 
-    regression_network, loss_data = train(network = regression_network, dataloader = trainloader, epochs = 50, device = 'cpu')
+    regression_network, loss_data = train(network = regression_network, dataloader = trainloader, epochs = 1000, device = 'cpu')
     SaveModel(models_dir, model_name, regression_network, loss_data)
     PlotLosses(model_name, loss_data)
 
 if __name__ == '__main__':
-    main(seed = 1023647)
+    main(seed = 543001)

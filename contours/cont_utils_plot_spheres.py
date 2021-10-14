@@ -30,41 +30,38 @@ def ConvertToXYZ(dataframe, bunny, plane):
     df_y = dataframe[selection_min + 1 : selection_max + 1 : 3]
     df_x = dataframe[selection_min + 2 : selection_max + 2 : 3]
 
+    idx = 2
     if bunny == list('nominal'):
-        idx = 2
-    elif '1' in bunny:
-        idx = 3
-    elif '2' in bunny:
-        idx = 4
-    elif '3' in bunny:
-        idx = 5
-    elif '4' in bunny:
-        idx = 6
+        idx += 0
     else:
-        raise Exception('No valid bunny selected...')
+        idx += int(bunny[-1])
 
     bunny_datapoints = np.block([df_x[:, idx].reshape(-1, 1), df_y[:, idx].reshape(-1, 1), df_z[:, idx].reshape(-1, 1)])
-    return bunny_datapoints.astype('float')
+    return bunny_datapoints.astype('float'), idx
 
 def DirectToXYZObject(dataframe, bunny):
-
     print("Creating dataframe object/class containing datapoints for each plane i.e. (.til, .hor, .ver)...")
     class plane_dataframe:
-        def __init__(self, til, hor, ver):
+        def __init__(self, til, hor, ver, params):
             self.til = til
             self.hor = hor
             self.ver = ver
+            self.params = params
 
-    converted_til = ConvertToXYZ(dataframe, bunny, "tilt")
+    converted_til, _ = ConvertToXYZ(dataframe, bunny, "tilt")
     converted_til = CorrectAxes(converted_til)
 
-    converted_hor = ConvertToXYZ(dataframe, bunny, "horizontal")
+    converted_hor, _ = ConvertToXYZ(dataframe, bunny, "horizontal")
     converted_hor = CorrectAxes(converted_hor)
 
-    converted_ver = ConvertToXYZ(dataframe, bunny, "vertical")
+    converted_ver, idx = ConvertToXYZ(dataframe, bunny, "vertical")
     converted_ver = CorrectAxes(converted_ver)
 
-    converted_dataframe = plane_dataframe(converted_til, converted_hor, converted_ver)
+    params = dataframe[81:84, idx]
+
+    converted_dataframe = plane_dataframe(converted_til, converted_hor, converted_ver, params)
+
+
 
     return converted_dataframe
 
