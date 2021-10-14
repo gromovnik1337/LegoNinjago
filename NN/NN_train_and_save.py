@@ -5,116 +5,146 @@ This script performs data set loading and subsequent training of the model. Fina
 - loss value: plot and .txt file
 Created by: Vice, 11.10.2021
 """
-import torch
-import torch.nn as nn
-import numpy as np
-import time
-import matplotlib.pyplot as plt
-import gc
 
-# Append the required sys.path for accessing utilities and save the data directory
 import os
+import gc
 import sys
-curr_dir = os.path.dirname(os.path.realpath(__file__))
-models_dir = os.getcwd() + "/models"
-os.chdir("..")
-data_dir = os.getcwd() + "/data/data_NN"
-sys.path.append(data_dir)
-sys.path.append(models_dir)
-os.chdir(curr_dir)
-
-# Input the folder where a trained model should be saved and it's name - N.B. add the folder to .gitignore!
-output_models_folder = curr_dir + "/output/trained_models"
-
+import torch
+import time
+import math
+import numpy as np
+import matplotlib.pyplot as plt
 from NN_params import *
-
-# Load the dataset
-from torch.utils.data import Dataset, DataLoader
+from pathlib import Path
+from torch import nn, optim
 from NN_dataset import bunniesDataset
+from torch.utils.data import Dataset, DataLoader
+from torch.nn import functional as F
 
-train_split_size = 1 
-test_split_size = 1
+class BunnyRegressorNetwork(nn.Module):
+    def __init__(self, in_channels, first_hidden, second_hidden, out_channels):
+        super(BunnyRegressorNetwork, self).__init__()
+        self.input_l    = nn.Linear(in_channels, first_hidden)
+        self.hidden_l   = nn.Linear(first_hidden, second_hidden)
+        self.output_l   = nn.Linear(second_hidden, out_channels)
 
-# Load Data
-dataset = bunniesDataset(
-    csv_file = data_dir + "/" + "annotations.csv",
-    root_dir = data_dir,
-)
+    def forward(self, x):
+        x   = F.relu(self.input_l(x))
+        x   = F.relu(self.hidden_l(x))
+        x   = self.output_l(x)
 
-train_set, test_set = torch.utils.data.random_split(dataset, [train_split_size, test_split_size])
-train_loader = DataLoader(dataset = train_set, batch_size = batch_size, shuffle = True)
-test_loader = DataLoader(dataset = test_set, batch_size = batch_size, shuffle = True)
+        return x
 
-# Piece of code to check what is inside the loaded data - adjust to the shape of the simulation
-test_iterator = iter(train_loader)
-first = next(test_iterator)
-print(first)
+def LoadDataset(dataset_dir):
+    dataset = bunniesDataset(
+            csv_file = dataset_dir + "/" + "annotations.csv",
+            root_dir = dataset_dir,
+            )
 
-"""
-# Define the models name. Naming convention based on the architecture, hyperparameters and dataset
-model_name = "Selene_2ConvPool_MO_z_500_e_50_lr_em4_lRelu_0p1"
+    return dataset
 
-print("------ Start training Selene ------ \n")
-print("Currently training: ", model_name)
-# Ensure that the nondeterministic operations always have same starting point - increases the reproducibility of the code
-torch.manual_seed(1)
-np.random.seed(1) 
+def SplitDataset(dataset, ratio):
+    train_split_size = math.floor(ratio * len(dataset))
+    test_split_size = len(dataset) - train_split_size
+    train_set, test_set = torch.utils.data.random_split(dataset, [train_split_size, test_split_size])
+    train_loader = DataLoader(dataset = train_set, batch_size = batch_size, shuffle = True)
+    test_loader = DataLoader(dataset = test_set, batch_size = batch_size, shuffle = True)
 
-gc.collect() # Release the memmory
+    return train_loader, test_loader
 
-model.train()
+def SaveModel(output_dir, model_name, model, loss_data):
+    model_dir = output_dir + '/' + model_name + '/'
+    Path(model_dir).mkdir(parents = True, exist_ok = True)
+    Path(model_dir).mkdir(parents = True, exist_ok = True)
+    torch.save(model, model_dir + model_name + ".pt")
+    torch.save(model.state_dict(), model_dir + model_name + "_state_dict")
 
-time_start = time.time()
+    # Create the loss value output - relevant for model optimization
+    txt_file_loss_output = open(model_dir + "/" + model_name + "_loss.txt", "w")
+    for element in loss_data:
+        txt_file_loss_output.write(str(element) + "\n")
+    txt_file_loss_output.close()
 
-test_var = True
-losses_all = []
+    print("Model, state dictionary and loss function values saved at: ", model_dir)
 
-for epoch in range(epochs):
-    overall_loss = 0
-    for batch_idx, x in enumerate(train_loader):
-        # x = x.view(batch_size, x_dim) # This flattens the input tensor, can be done with transforms.ToTensor()
-        x = x.to(DEVICE) # Save the batch to the device (CPU or GPU)
+def PlotLosses(model_name, loss_data):
+        plt.figure(figsize = (12, 7))
+        plt.suptitle(model_name + " loss values")
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.plot(loss_data)
+        plt.show()
 
-        optimizer.zero_grad() # Remove the gradients from the previous iteration
-        
-        # Feed the batch into VAE, compute the loss
-        x_hat, mean, log_var = model(x.float())       
-        loss = loss_function(x.float(), x_hat, mean, log_var)
-        
-        # Add the loss to the cumulative loss
-        overall_loss += loss.item()
-        
-        # Backpropagate the loss and perform the optimizaiton with such gradients
-        loss.backward()
-        optimizer.step()
-    
-    loss_in_epoch = overall_loss / (batch_idx*batch_size)
-    print("\tEpoch", epoch + 1, "complete!", "\tAverage Loss: ", loss_in_epoch)
-    losses_all.append(loss_in_epoch)
+def train(network, dataloader, epochs, device):
+    gc.collect()
+    network.train()
+    test_var = True
+    losses_all = []
 
-time_end = time.time()    
-print("------ Training finished!!! ------ \n")
-print("Total training time: {0} min.".format( int((time_end - time_start) /60) ))
+    optimizer   = optim.Adam(network.parameters(), lr = 0.001)
+    criterion   = nn.MSELoss()
 
-# Save the model
-PATH_model = output_models_folder + "/" + model_name + ".pt"
-PATH_state_dict = output_models_folder + "/" + model_name + "_state_dict"
-torch.save(model, PATH_model)
-torch.save(model.state_dict(), PATH_state_dict)
+    print("------ Bertybob is now learning ------ \n")
+    time_start = time.time()
 
-# Create the loss value output - relevant for model optimization
-txt_file_loss_output = open(output_models_folder + "/" + model_name + "_loss.txt", "w")
-for element in losses_all:
-    txt_file_loss_output.write(str(element) + "\n")
-txt_file_loss_output.close()
+    for epoch in range(epochs):
+        running_loss    =   0
+        iter_counter    =   0
 
-# Plot the loss
-plt.figure()
-plt.title(model_name + " " + "loss values")
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.plot(losses_all)
-plt.show()
+        for batch_idx, (label, input) in enumerate(dataloader):
+            input = input.to(device) # Save the batch to the device (CPU or GPU)
+            optimizer.zero_grad() # Remove the gradients from the previous iteration
 
-print("Model, state dictionary and loss function values saved at: ", output_models_folder + "/" + model_name)
-"""
+            # Feed the batch into VAE, compute the loss
+            output  = network(input)
+            loss    = criterion(output, label)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            iter_counter += 1
+
+            '''
+            if iter_counter % 4 == 3:
+                print("Epoch: {:3d} | Ieration : {:3d} | Loss : {:3.3f}".format(epoch + 1, iter_counter + 1, running_loss))
+                running_loss    =   0
+            '''
+
+            # Backpropagate the loss and perform the optimizaiton with such gradients
+
+        loss_in_epoch = running_loss / (batch_idx*batch_size)
+        print("\tEpoch", epoch + 1, "complete!", "\tAverage Loss: ", loss_in_epoch)
+        losses_all.append(loss_in_epoch)
+
+    time_end = time.time()
+    print("\n------ Training finished!!! ------ \n")
+    print("Total training time: {0} min.".format( int((time_end - time_start) /60) ))
+
+    return network, losses_all
+
+def main(seed):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+
+    # Append the required sys.path for accessing utilities and save the data directory
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    models_dir = os.getcwd() + "/models"
+    os.chdir("..")
+    data_dir = os.getcwd() + "/data/data_NN"
+    sys.path.append(data_dir)
+    sys.path.append(models_dir)
+    os.chdir(curr_dir)
+
+    output_models_folder    = curr_dir + "/output/trained_models" # Input the folder where a trained model should be saved and it's name - N.B. add the folder to .gitignore!
+    model_name              = "Bertybob" # Define the models name. Naming convention based on the architecture, hyperparameters and dataset
+
+    regression_network      = BunnyRegressorNetwork(input_dim, first_hidden, second_hidden, output_dim)
+    dataset                 = LoadDataset(data_dir)
+    trainloader, testloader = SplitDataset(dataset, 0.75)
+
+    regression_network, loss_data = train(network = regression_network, dataloader = trainloader, epochs = 50, device = 'cpu')
+    SaveModel(models_dir, model_name, regression_network, loss_data)
+    PlotLosses(model_name, loss_data)
+
+if __name__ == '__main__':
+    main(seed = 1023647)

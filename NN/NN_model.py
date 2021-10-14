@@ -41,6 +41,20 @@ cuda = False
 DEVICE = torch.device("cuda" if cuda else "cpu")
 torch.cuda.empty_cache() # Clean the memory
 
+class BunnyRegressorNetwork(nn.Module):
+    def __init__(self, in_channels, first_hidden, second_hidden, out_channels):
+        super(BunnyRegressorNetwork, self).__init__()
+        self.input_l    = nn.Linear(in_channels, first_hidden)
+        self.hidden_l   = nn.Linear(first_hidden, second_hidden)
+        self.output_l   = nn.Linear(second_hidden, out_channels)
+
+    def forward(self, x):
+        x   = F.relu(self.input_l(x))
+        x   = F.relu(self.hidden_l(x))
+        x   = self.output_l(x)
+
+        return x
+
 nn_model = lambda: torch.nn.Sequential(
                     torch.nn.Linear(M, n_hidden_units), # M features to H hiden units
                     # 1st transfer function, either Tanh or ReLU:
