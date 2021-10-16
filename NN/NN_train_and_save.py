@@ -15,42 +15,21 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from NN_params import *
+from NN_model import *
 from pathlib import Path
 from torch import nn, optim
-from NN_dataset import bunniesDataset
-from torch.utils.data import Dataset, DataLoader
+from NN_dataset import train_loader
 from torch.nn import functional as F
 
-class BunnyRegressorNetwork(nn.Module):
-    def __init__(self, in_channels, first_hidden, second_hidden, out_channels):
-        super(BunnyRegressorNetwork, self).__init__()
-        self.input_l    = nn.Linear(in_channels, first_hidden)
-        self.hidden_l   = nn.Linear(first_hidden, second_hidden)
-        self.output_l   = nn.Linear(second_hidden, out_channels)
+# Append the required sys.path for accessing utilities and save the data directory
+curr_dir = os.path.dirname(os.path.realpath(__file__))
+models_dir = os.getcwd() + "/models"
+os.chdir("..")
+data_dir = os.getcwd() + "/data/data_NN"
+sys.path.append(data_dir)
+sys.path.append(models_dir)
+os.chdir(curr_dir)
 
-    def forward(self, x):
-        x   = F.relu(self.input_l(x))
-        x   = F.relu(self.hidden_l(x))
-        x   = self.output_l(x)
-
-        return x
-
-def LoadDataset(dataset_dir):
-    dataset = bunniesDataset(
-            csv_file = dataset_dir + "/" + "ErrorDataframe.csv",
-            root_dir = dataset_dir,
-            )
-
-    return dataset
-
-def SplitDataset(dataset, ratio):
-    train_split_size = math.floor(ratio * len(dataset))
-    test_split_size = len(dataset) - train_split_size
-    train_set, test_set = torch.utils.data.random_split(dataset, [train_split_size, test_split_size])
-    train_loader = DataLoader(dataset = train_set, batch_size = batch_size, shuffle = True)
-    test_loader = DataLoader(dataset = test_set, batch_size = batch_size, shuffle = True)
-
-    return train_loader, test_loader
 
 def SaveModel(output_dir, model_name, model, loss_data):
     model_dir = output_dir + '/' + model_name + '/'
@@ -78,11 +57,7 @@ def PlotLosses(model_name, loss_data):
 def train(network, dataloader, epochs, device):
     gc.collect()
     network.train()
-    test_var = True
     losses_all = []
-
-    optimizer   = optim.Adam(network.parameters(), lr = 0.005)
-    criterion   = nn.MSELoss()
 
     print("------ Bertybob is now learning ------ \n")
     time_start = time.time()
@@ -95,8 +70,8 @@ def train(network, dataloader, epochs, device):
             input   = input.to(device) # Save the batch to the device (CPU or GPU)
             optimizer.zero_grad() # Remove the gradients from the previous iteration
 
-            # Feed the batch into VAE, compute the loss
-            output  = network(input)
+            # Feed the batch into the model, compute the loss
+            output  = network(input) # Perform the forward pass
             loss    = criterion(output, label)
             loss.backward()
             optimizer.step()
@@ -104,14 +79,7 @@ def train(network, dataloader, epochs, device):
             running_loss += loss.item()
             iter_counter += 1
 
-            '''
-            if iter_counter % 4 == 3:
-                print("Epoch: {:3d} | Ieration : {:3d} | Loss : {:3.3f}".format(epoch + 1, iter_counter + 1, running_loss))
-                running_loss    =   0
-            '''
-
-            # Backpropagate the loss and perform the optimizaiton with such gradients
-
+        # Backpropagate the loss and perform the optimizaiton with such gradients
         loss_in_epoch = running_loss / (batch_idx*batch_size)
         print("\tEpoch", epoch + 1, "complete!", "\tAverage Loss: ", loss_in_epoch)
         losses_all.append(loss_in_epoch)
@@ -122,29 +90,22 @@ def train(network, dataloader, epochs, device):
 
     return network, losses_all
 
-def main(seed):
+def main(model, seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
-
-    # Append the required sys.path for accessing utilities and save the data directory
-    curr_dir = os.path.dirname(os.path.realpath(__file__))
-    models_dir = os.getcwd() + "/models"
-    os.chdir("..")
-    data_dir = os.getcwd() + "/data/data_NN"
-    sys.path.append(data_dir)
-    sys.path.append(models_dir)
-    os.chdir(curr_dir)
-
-    output_models_folder    = curr_dir + "/output/trained_models" # Input the folder where a trained model should be saved and it's name - N.B. add the folder to .gitignore!
+    #output_models_folder    = curr_dir + "/output/trained_models" # Input the folder where a trained model should be saved and it's name - N.B. add the folder to .gitignore!
     model_name              = "Bertybob" # Define the models name. Naming convention based on the architecture, hyperparameters and dataset
 
-    regression_network      = BunnyRegressorNetwork(input_dim, first_hidden, second_hidden, output_dim)
-    dataset                 = LoadDataset(data_dir)
-    trainloader, testloader = SplitDataset(dataset, 0.75)
+    trainloader              = train_loader
 
-    regression_network, loss_data = train(network = regression_network, dataloader = trainloader, epochs = 1000, device = 'cpu')
+    #test_iterator = iter(trainloader)
+    #first = next(test_iterator)
+    #print(first)
+
+    regression_network, loss_data = train(network = model, dataloader = trainloader, epochs = epochs, device = 'cpu')
+
     SaveModel(models_dir, model_name, regression_network, loss_data)
     PlotLosses(model_name, loss_data)
 
 if __name__ == '__main__':
-    main(seed = 543001)
+    main(model = regression_network, seed = 543001)
