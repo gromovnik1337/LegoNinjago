@@ -10,14 +10,14 @@ import sys
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 os.chdir("..")
-data_dir = os.getcwd() + "/data/"
-NN_data_dir = data_dir + "data_NN/"
+data_dir = os.getcwd() + "/data"
+NN_data_dir = data_dir + "/" + "data_NN"
 sys.path.append(data_dir)
 os.chdir(curr_dir)
 
 if __name__ == '__main__':
 
-    PlaneData = pd.read_csv(data_dir + "/" + "Simulation_results_210619.csv").to_numpy()
+    PlaneData = pd.read_csv(NN_data_dir + "/" + "Bunny_1st_batch_NN.csv").to_numpy()
 
     '''
     [cad_bunny_dps, bunny_1_dps, bunny_2_dps, bunny_3_dps, bunny_4_dps] = \
@@ -29,8 +29,8 @@ if __name__ == '__main__':
     bunny_2_points  =   DirectToXYZObject(PlaneData, 'bunny_sim_2')
     bunny_3_points  =   DirectToXYZObject(PlaneData, 'bunny_sim_3')
     bunny_4_points  =   DirectToXYZObject(PlaneData, 'bunny_sim_4')
-    bunny_5_points  =   DirectToXYZObject(PlaneData, 'bunny_sim_5')
-    bunny_6_points  =   DirectToXYZObject(PlaneData, 'bunny_sim_6')
+    #bunny_5_points  =   DirectToXYZObject(PlaneData, 'bunny_sim_5')
+    #bunny_6_points  =   DirectToXYZObject(PlaneData, 'bunny_sim_6')
 
     '''
     each of the above ojbects has the folllowing structure:
@@ -41,12 +41,12 @@ if __name__ == '__main__':
 
     '''
 
-    error_df = pd.DataFrame(columns = ["bunny_id", "til_err_x", "til_err_y", "til_err_z", "hor_err_x", "hor_err_y", "hor_err_z", "ver_err_x", "ver_err_y", "ver_err_z", "laser_power", "laser_speed", "hatch_space"])
+    error_df = pd.DataFrame(columns = ["bunny_id", "til_err_x", "til_err_y", "til_err_z", "hor_err_x", "hor_err_y", "hor_err_z", "ver_err_x", "ver_err_y", "ver_err_z"])#, "laser_power", "laser_speed", "hatch_space"])
 
     plot_active = False
 
     df_idx = 1
-    for idx, bunny in enumerate([bunny_1_points, bunny_2_points, bunny_3_points, bunny_4_points, bunny_5_points, bunny_6_points]):
+    for idx, bunny in enumerate([bunny_1_points, bunny_2_points, bunny_3_points, bunny_4_points]):#, bunny_5_points, bunny_6_points]):
 
         if plot_active == True:
             fig = plt.figure(figsize = (7, 7))

@@ -57,6 +57,7 @@ def PlotLosses(model_name, loss_data):
 def train(network, dataloader, epochs, device):
     gc.collect()
     network.train()
+
     losses_all = []
 
     print("------ Bertybob is now learning ------ \n")

@@ -70,12 +70,12 @@ class bunniesDataset_test(Dataset):
 
 
 dataset_training = bunniesDataset_training(
-        csv_file = data_dir + "/" + "ErrorDataframe.csv",
+        csv_file = data_dir + "/" + "Sim_ALL_features.csv",
         root_dir = data_dir,
             )
 
 dataset_testing = bunniesDataset_test(
-        csv_file = data_dir + "/" + "test_data.csv",
+        csv_file = data_dir + "/" + "Sim_test_features.csv",
         root_dir = data_dir,
             )
 

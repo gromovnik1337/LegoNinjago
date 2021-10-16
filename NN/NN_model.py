@@ -14,12 +14,14 @@ class BunnyRegressorNetwork(nn.Module):
         self.hidden_l_1   = nn.Linear(first_hidden, second_hidden)
         self.hidden_l_2   = nn.Linear(second_hidden, second_hidden)
         self.output_l   = nn.Linear(second_hidden, out_channels)
-        self.transferFunction = nn.LeakyReLU(lRelu_neg_slope)
+        #self.transferFunction = nn.LeakyReLU(lRelu_neg_slope)
+        self.transferFunction = nn.Tanh()
+        #self.transferFunction_last = nn.Sigmoid()
 
     def forward(self, X):
         h_1   = self.transferFunction(self.input_l(X))
         h_2   = self.transferFunction(self.hidden_l_1(h_1))
-        h_3   = self.transferFunction(self.hidden_l_2(h_2))
+        h_3   = self.transferFunction(self.hidden_l_1(h_2))
         y   = self.output_l(h_3)
 
         return y

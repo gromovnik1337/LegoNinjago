@@ -5,7 +5,7 @@ second_hidden   = 30
 output_dim      = 3
 lRelu_neg_slope = 0.1
 
-lr          = 0.005
-epochs      = 10000
+lr          = 0.01
+epochs      = 1000
 ratio       = 0.75
-batch_size  = 2
+batch_size  = 4

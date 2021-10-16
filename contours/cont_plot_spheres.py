@@ -60,12 +60,12 @@ if __name__ == '__main__':
     bunny_4_pts = CorrectAxes(bunny_4_pts)
 
     # Terrible coding, I can only apologise...
-    tilt_dps = ConvertToXYZ(PlaneData, 'nominal', 'tilt')
-    tilt_dps = CorrectAxes(tilt_dps)
-    hor_dps = ConvertToXYZ(PlaneData, 'nominal', 'horizontal')
-    hor_dps = CorrectAxes(hor_dps)
-    ver_dps = ConvertToXYZ(PlaneData, 'nominal', 'vertical')
-    ver_dps = CorrectAxes(ver_dps)
+    tilt_dps, _ = ConvertToXYZ(PlaneData, 'nominal', 'tilt')
+    tilt_dps    = CorrectAxes(tilt_dps)
+    hor_dps, _ = ConvertToXYZ(PlaneData, 'nominal', 'horizontal')
+    hor_dps    = CorrectAxes(hor_dps)
+    ver_dps, _ = ConvertToXYZ(PlaneData, 'nominal', 'vertical')
+    ver_dps    = CorrectAxes(ver_dps)
 
     fig = plt.figure(figsize = (16, 16))
 
