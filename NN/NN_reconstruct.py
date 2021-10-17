@@ -43,11 +43,16 @@ model.load_state_dict(torch.load(state_dict_path))
 model.eval()
 
 print("------ Making inference ------ \n")
-print("Model name: ", model_name)
-
+print("Model name:  ", model_name)
+print("\n")
+i = 0
 with torch.no_grad():
     for y in test_loader:
         test = model(y)
-        print(test)
+        for idx, output_params in enumerate(test.numpy()):
+            print("Bunny {0} printing parameters:".format(idx + 1))
+            print("Laser power: ", np.round(output_params[0] * 100, 2))
+            print("Laser speed: ", np.round(output_params[1] * 10000, 2))
+            print("Hatch spacing: ", np.round(output_params[2], 2))
+            print("\n")
 
-print("Output saved at: ", output_folder)        
